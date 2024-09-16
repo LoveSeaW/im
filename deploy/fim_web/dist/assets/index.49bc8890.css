@@ -1,0 +1,1 @@
+.group_chat_view{height:100%}.group_chat_view .group_chat_head{height:40px;border-bottom:1px solid var(--border_color);display:flex;justify-content:space-between;padding:0 10px;align-items:center;color:var(--text_color)}.group_chat_view .group_chat_head .icon{cursor:pointer}.group_chat_view .group_chat_main{height:calc(100% - 40px)}

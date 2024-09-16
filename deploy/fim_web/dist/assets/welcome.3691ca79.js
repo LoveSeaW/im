@@ -1,0 +1,1 @@
+import{w as e}from"./welcome.eb853ed3.js";import{d as o,K as r,a as t}from"./index.00362c69.js";import"./_plugin-vue_export-helper.cdc0426e.js";const _=o({__name:"welcome",setup(a){return(c,m)=>(t(),r(e))}});export{_ as default};

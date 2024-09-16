@@ -1,0 +1,1 @@
+import{e as r}from"./event_store.c213d25a.js";import{d as m,x as c}from"./index.00362c69.js";const _=m({__name:"fim_event",props:{eventKey:{}},emits:["event"],setup(t,{emit:n}){const e=r(),o=n,s=t;return c(()=>e.eventKey,()=>{e.eventKey===s.eventKey&&o("event")}),(i,p)=>null}});export{_};

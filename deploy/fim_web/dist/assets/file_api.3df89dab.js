@@ -1,0 +1,1 @@
+import{a8 as o}from"./index.00362c69.js";function r(a,e){const t=new FormData;return t.set("image",a),t.set("imageType",e),o.post("/api/file/image",t,{headers:{"Content-Type":"multipart/form-data"}})}function p(a){const e=new FormData;return e.set("file",a),o.post("/api/file/file",e,{headers:{"Content-Type":"multipart/form-data"}})}export{p as a,r as u};

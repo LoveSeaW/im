@@ -1,0 +1,1 @@
+import{w as e}from"./welcome.eb853ed3.js";import{d as o,K as r,a as s}from"./index.00362c69.js";import"./_plugin-vue_export-helper.cdc0426e.js";const _=o({__name:"session_welcome",setup(t){return(a,c)=>(s(),r(e))}});export{_ as default};

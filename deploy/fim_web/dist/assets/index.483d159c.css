@@ -1,0 +1,1 @@
+.user_chat_view{height:100%}.user_chat_view .user_chat_head{height:40px;border-bottom:1px solid var(--border_color);display:flex;justify-content:space-between;padding:0 10px;align-items:center;color:var(--text_color)}.user_chat_view .user_chat_head .icon{cursor:pointer}.user_chat_view .user_chat_main{height:100%}

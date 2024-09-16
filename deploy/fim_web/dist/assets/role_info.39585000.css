@@ -1,0 +1,1 @@
+.role_info_view .el-radio-group{display:flex;flex-direction:column;align-items:start}.role_info_view .question,.role_info_view .answer{display:flex;width:500px;margin-bottom:10px}.role_info_view .question .el-input,.role_info_view .answer .el-input{width:300px}.role_info_view .question>span,.role_info_view .answer>span{width:4rem}
