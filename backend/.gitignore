@@ -1,0 +1,5 @@
+.idea
+fim_file/file_api/uploads/avatar/*
+fim_file/file_api/uploads/file/*
+fim_file/file_api/uploads/group_avatar/*
+deploy/mysql/datadir/*

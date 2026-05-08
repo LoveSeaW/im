@@ -1,0 +1,1 @@
+export type eventKeyType = "groupList" | "" | "sessionList" | "friendList" | "history"

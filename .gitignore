@@ -1,0 +1,50 @@
+# IDE / Editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Node / Vite (frontend)
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/coverage/
+*.local
+
+# Go
+*.exe
+*.exe~
+*.test
+*.out
+vendor/
+
+# 后端文件服务上传目录
+backend/fim_file/file_api/uploads/avatar/*
+backend/fim_file/file_api/uploads/file/*
+backend/fim_file/file_api/uploads/group_avatar/*
+backend/deploy/fim_file/file_api/uploads/avatar/*
+backend/deploy/fim_file/file_api/uploads/file/*
+backend/deploy/fim_file/file_api/uploads/group_avatar/*
+
+# 部署运行期数据 / 产物
+backend/deploy/mysql/datadir/
+backend/deploy/nginx/logs/
+backend/deploy/nginx/cert/*.pem
+backend/deploy/nginx/cert/*.key
+backend/deploy/fim_web/dist/
+
+# 前端 cypress
+frontend/cypress/videos/
+frontend/cypress/screenshots/
