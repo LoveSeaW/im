@@ -8,6 +8,7 @@ import (
 	"fim_server/fim_group/group_api/internal/types"
 	"fim_server/fim_group/group_models"
 	"fmt"
+
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -33,7 +34,6 @@ type SessionData struct {
 }
 
 func (l *GroupSessionLogic) GroupSession(req *types.GroupSessionRequest) (resp *types.GroupSessionListResponse, err error) {
-	// 先查我有哪些群
 	var userGroupIDList []uint
 	l.svcCtx.DB.Model(group_models.GroupMemberModel{}).
 		Where("user_id = ?", req.UserID).
@@ -42,13 +42,16 @@ func (l *GroupSessionLogic) GroupSession(req *types.GroupSessionRequest) (resp *
 		return &types.GroupSessionListResponse{List: []types.GroupSessionResponse{}, Count: 0}, nil
 	}
 
-	// 查哪些聊天记录是被删掉的
 	var msgDeleteIDList []uint
-	l.svcCtx.DB.Model(group_models.GroupUserMsgDeleteModel{}).Where("group_id in ?", userGroupIDList).Select("msg_id").Scan(&msgDeleteIDList)
+	l.svcCtx.DB.Model(group_models.GroupUserMsgDeleteModel{}).
+		Where("group_id in ?", userGroupIDList).
+		Select("msg_id").Scan(&msgDeleteIDList)
 
-	query := l.svcCtx.DB.Where("group_id in (?)", userGroupIDList)
+	conditions := []string{"group_id in ?"}
+	args := []any{userGroupIDList}
 	if len(msgDeleteIDList) > 0 {
-		query = query.Where("id not in ?", msgDeleteIDList)
+		conditions = append(conditions, "id not in ?")
+		args = append(args, msgDeleteIDList)
 	}
 
 	sessionList, count, _ := list_query.ListQuery(l.svcCtx.DB, SessionData{}, list_query.Option{
@@ -59,13 +62,13 @@ func (l *GroupSessionLogic) GroupSession(req *types.GroupSessionRequest) (resp *
 		},
 		Debug: true,
 		Table: func() (string, any) {
-			// 内层：GROUP BY 获取每个群的最后消息时间
 			inner := l.svcCtx.DB.Model(&group_models.GroupMsgModel{}).
-				Select("group_id as g_id",
-					"max(created_at) as new_msg_date").
-				Where(query).
+				Select("group_id as g_id", "max(created_at) as new_msg_date").
+				Where(conditions[0], args[0]).
 				Group("group_id")
-			// 外层：在 grouped 结果上追加 newMsgPreview 和 isTop
+			for index := 1; index < len(conditions); index++ {
+				inner = inner.Where(conditions[index], args[index])
+			}
 			return "(?) as u", l.svcCtx.DB.Table("(?) as grouped", inner).
 				Select("g_id", "new_msg_date",
 					"(select msg_preview from group_msg_models as g where g.group_id = grouped.g_id order by g.created_at desc limit 1) as new_msg_preview",
@@ -77,9 +80,13 @@ func (l *GroupSessionLogic) GroupSession(req *types.GroupSessionRequest) (resp *
 	for _, data := range sessionList {
 		groupIDList = append(groupIDList, data.GroupID)
 	}
+	if len(groupIDList) == 0 {
+		return &types.GroupSessionListResponse{List: []types.GroupSessionResponse{}, Count: int(count)}, nil
+	}
+
 	var groupListModel []group_models.GroupModel
 	l.svcCtx.DB.Find(&groupListModel, "id in ?", groupIDList)
-	var groupMap = map[uint]group_models.GroupModel{}
+	groupMap := map[uint]group_models.GroupModel{}
 	for _, model := range groupListModel {
 		groupMap[model.ID] = model
 	}
@@ -96,5 +103,5 @@ func (l *GroupSessionLogic) GroupSession(req *types.GroupSessionRequest) (resp *
 		})
 	}
 	resp.Count = int(count)
-	return
+	return resp, nil
 }

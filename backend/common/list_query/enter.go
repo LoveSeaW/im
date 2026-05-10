@@ -3,46 +3,44 @@ package list_query
 import (
 	"fim_server/common/models"
 	"fmt"
+	"strings"
+
 	"gorm.io/gorm"
 )
 
 type Option struct {
 	PageInfo models.PageInfo
-	Where    *gorm.DB // 高级查询
+	Where    *gorm.DB
 	Debug    bool
 	Joins    string
-	Likes    []string             // 模糊匹配的字段
-	Preload  []string             // 预加载字段
-	Table    func() (string, any) // 子查询
-	Groups   []string             // 分组
+	Likes    []string
+	Preload  []string
+	Table    func() (string, any)
+	Groups   []string
 }
 
 func ListQuery[T any](db *gorm.DB, model T, option Option) (list []T, count int64, err error) {
-
 	if option.Debug {
 		db = db.Debug()
 	}
 
-	// 把结构体自己的查询条件查了
-	query := db.Where(model)
-
-	// 模糊匹配
-	if option.PageInfo.Key != "" && len(option.Likes) > 0 {
-		likeQuery := db.Session(&gorm.Session{NewDB: true})
-		for index, column := range option.Likes {
-			if index == 0 {
-				// where name like '%fengfeng%'
-				likeQuery = likeQuery.Where(fmt.Sprintf("%s ILIKE ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
-			} else {
-				likeQuery = likeQuery.Or(fmt.Sprintf("%s ILIKE ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
-			}
-		}
-		query = query.Where(likeQuery)
-	}
-
+	query := db
 	if option.Table != nil {
 		table, data := option.Table()
 		query = query.Table(table, data)
+	} else {
+		query = query.Model(model)
+	}
+	query = query.Where(model)
+
+	if option.PageInfo.Key != "" && len(option.Likes) > 0 {
+		conditions := make([]string, 0, len(option.Likes))
+		args := make([]any, 0, len(option.Likes))
+		for _, column := range option.Likes {
+			conditions = append(conditions, fmt.Sprintf("%s ILIKE ?", column))
+			args = append(args, fmt.Sprintf("%%%s%%", option.PageInfo.Key))
+		}
+		query = query.Where("("+strings.Join(conditions, " OR ")+")", args...)
 	}
 
 	if option.Joins != "" {
@@ -50,34 +48,29 @@ func ListQuery[T any](db *gorm.DB, model T, option Option) (list []T, count int6
 	}
 
 	if option.Where != nil {
-		query = query.Where(option.Where)
-	}
-
-	if len(option.Groups) > 0 {
-		for _, group := range option.Groups {
-			query = query.Group(group)
+		if whereClause, ok := option.Where.Statement.Clauses["WHERE"]; ok && whereClause.Expression != nil {
+			query = query.Where(whereClause.Expression)
 		}
 	}
 
-	// 求总数（不用 Model(model) 避免零值字段被当作 WHERE 条件）
+	for _, group := range option.Groups {
+		query = query.Group(group)
+	}
+
 	err = query.Count(&count).Error
 	if err != nil {
 		return
 	}
 
-	// 预加载
-	for _, s := range option.Preload {
-		query = query.Preload(s)
+	for _, preload := range option.Preload {
+		query = query.Preload(preload)
 	}
 
-	// 分页查询
 	if option.PageInfo.Page <= 0 {
 		option.PageInfo.Page = 1
 	}
-	if option.PageInfo.Limit != -1 { // 如果是-1就是查全部
-		if option.PageInfo.Limit <= 0 {
-			option.PageInfo.Limit = 10
-		}
+	if option.PageInfo.Limit != -1 && option.PageInfo.Limit <= 0 {
+		option.PageInfo.Limit = 10
 	}
 
 	offset := (option.PageInfo.Page - 1) * option.PageInfo.Limit
