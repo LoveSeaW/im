@@ -3,6 +3,7 @@ services:
 
   postgres:
     image: postgres:17
+    container_name: im_postgres
     restart: always
     environment:
       POSTGRES_USER: root
@@ -16,12 +17,14 @@ services:
 
   redis:
     image: redis:7.4-alpine
+    container_name: im_redis
     restart: always
     ports:
       - "6379:6379"
 
   etcd:
     image: bitnami/etcd:3.5.19
+    container_name: im_etcd
     environment:
       - ALLOW_NONE_AUTHENTICATION=yes
       - ETCD_ADVERTISE_CLIENT_URLS=http://127.0.0.1:2379
@@ -31,6 +34,7 @@ services:
 
   zookeeper:
     image: bitnami/zookeeper:3.9
+    container_name: im_zookeeper
     restart: always
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
@@ -39,6 +43,7 @@ services:
 
   kafka:
     image: bitnami/kafka:3.9
+    container_name: im_kafka
     restart: always
     ports:
       - "9092:9092"
@@ -51,6 +56,7 @@ services:
 
   kafka-map:
     image: dushixiang/kafka-map:latest
+    container_name: im_kafka_map
     restart: always
     ports:
       - "9001:8080"

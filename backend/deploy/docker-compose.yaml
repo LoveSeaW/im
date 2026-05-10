@@ -3,6 +3,7 @@ services:
 
   postgres:
     image: postgres:17
+    container_name: im_postgres
     restart: always
     network_mode: host
     environment:
@@ -15,11 +16,13 @@ services:
 
   redis:
     image: redis:7.4-alpine
+    container_name: im_redis
     restart: always
     network_mode: host
 
   etcd:
     image: bitnami/etcd:3.5.19
+    container_name: im_etcd
     network_mode: host
     environment:
       - ALLOW_NONE_AUTHENTICATION=yes
@@ -28,13 +31,16 @@ services:
 
   zookeeper:
     image: bitnami/zookeeper:3.9
+    container_name: im_zookeeper
     restart: always
     network_mode: host
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_ENABLE_ADMIN_SERVER=no
 
   kafka:
     image: bitnami/kafka:3.9
+    container_name: im_kafka
     restart: always
     network_mode: host
     environment:
@@ -46,6 +52,7 @@ services:
 
   kafka-map:
     image: dushixiang/kafka-map:latest
+    container_name: im_kafka_map
     restart: always
     network_mode: host
     environment:
@@ -56,6 +63,7 @@ services:
   gateway:
     build:
       context: fim_gateway
+    container_name: im_gateway
     restart: always
     network_mode: host
     volumes:
@@ -64,6 +72,7 @@ services:
   auth_api:
     build:
       context: fim_auth/auth_api
+    container_name: im_auth_api
     restart: always
     network_mode: host
     volumes:
@@ -78,6 +87,7 @@ services:
   chat_api:
     build:
       context: fim_chat/chat_api
+    container_name: im_chat_api
     restart: always
     network_mode: host
     volumes:
@@ -91,6 +101,7 @@ services:
   chat_rpc:
     build:
       context: fim_chat/chat_rpc
+    container_name: im_chat_rpc
     restart: always
     network_mode: host
     volumes:
@@ -101,6 +112,7 @@ services:
   file_api:
     build:
       context: fim_file/file_api
+    container_name: im_file_api
     restart: always
     network_mode: host
     volumes:
@@ -113,6 +125,7 @@ services:
   file_rpc:
     build:
       context: fim_file/file_rpc
+    container_name: im_file_rpc
     restart: always
     network_mode: host
     volumes:
@@ -123,6 +136,7 @@ services:
   group_api:
     build:
       context: fim_group/group_api
+    container_name: im_group_api
     restart: always
     network_mode: host
     volumes:
@@ -136,6 +150,7 @@ services:
   group_rpc:
     build:
       context: fim_group/group_rpc
+    container_name: im_group_rpc
     restart: always
     network_mode: host
     volumes:
@@ -147,6 +162,7 @@ services:
   logs_api:
     build:
       context: fim_logs/logs_api
+    container_name: im_logs_api
     restart: always
     network_mode: host
     volumes:
@@ -159,6 +175,7 @@ services:
   settings_api:
     build:
       context: fim_settings/settings_api
+    container_name: im_settings_api
     restart: always
     network_mode: host
     volumes:
@@ -169,6 +186,7 @@ services:
   settings_rpc:
     build:
       context: fim_settings/settings_rpc
+    container_name: im_settings_rpc
     restart: always
     network_mode: host
     volumes:
@@ -179,6 +197,7 @@ services:
   user_api:
     build:
       context: fim_user/user_api
+    container_name: im_user_api
     restart: always
     network_mode: host
     volumes:
@@ -193,6 +212,7 @@ services:
   user_rpc:
     build:
       context: fim_user/user_rpc
+    container_name: im_user_rpc
     restart: always
     network_mode: host
     volumes:
@@ -203,6 +223,7 @@ services:
 
   fim_web:
     image: nginx:alpine
+    container_name: im_fim_web
     restart: always
     network_mode: host
     volumes:
