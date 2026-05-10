@@ -109,7 +109,7 @@ watch(() => store.chatMsgData, () => {
     return
   }
   const friendID = Number(route.params.id)
-  if (store.chatMsgData.revUser.id === friendID || store.chatMsgData.sendUser.id) {
+  if (store.chatMsgData.revUser.id === friendID || store.chatMsgData.sendUser.id === friendID) {
     // 如果它没有id，或者类型是tipMsg
     // 判断是不是对方撤回了消息
     if (store.chatMsgData.msg.type === 8) {

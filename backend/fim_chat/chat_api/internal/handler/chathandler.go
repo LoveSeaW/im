@@ -151,6 +151,8 @@ func registerConnection(userID uint, addr string, conn *websocket.Conn, svcCtx *
 	userWs := &UserWsInfo{
 		CurrentConn: conn,
 		Limiter:     limiter,
+		WsClientMap: &sync.Map{},
+		MsgChan:     make(chan []byte, messageQueueSize),
 	}
 
 	// 加载或存储用户连接信息
@@ -245,8 +247,8 @@ func processMessage(req ChatRequest, userID uint, userWsInfo *UserWsInfo, svcCtx
 			continue
 		}
 		friendAny, ok := UserOnlineWsMap.Load(info.UserId)
-		friend := friendAny.(*UserWsInfo)
 		if ok {
+			friend := friendAny.(*UserWsInfo)
 			text := fmt.Sprintf("好友 %s 上线了", userInfo.Nickname)
 			// 判断用户是否开了好友上线提醒
 			if friend.UserInfo.UserConfModel.FriendOnline {
@@ -725,9 +727,9 @@ func buildChatResponse(revUserID uint, sendUserID uint, msg ctype.Msg) []byte {
 		return nil
 	}
 	sendUserAny, ok1 := UserOnlineWsMap.Load(sendUserID)
-	sendUser := sendUserAny.(*UserWsInfo)
 	var sendUserInfo ctype.UserInfo
 	if ok1 {
+		sendUser := sendUserAny.(*UserWsInfo)
 		sendUserInfo = ctype.UserInfo{
 			ID:       sendUser.UserInfo.ID,
 			NickName: sendUser.UserInfo.Nickname,
@@ -830,10 +832,16 @@ func SendMsgByUser(svcCtx *svc.ServiceContext, revUserId uint, sendUserID uint, 
 		MsgPreview: msg.MsgPreview(),
 		CreatedAt:  time.Now(),
 	}
-	revUser := revUserAny.(*UserWsInfo)
+
+	// 发送者必须在线
+	if !ok2 {
+		return
+	}
 	sendUser := sendUserAny.(*UserWsInfo)
-	if ok1 && ok2 && sendUserID == revUserId {
+
+	if ok1 && sendUserID == revUserId {
 		// 自己给自己发
+		revUser := revUserAny.(*UserWsInfo)
 		resp.RevUser = ctype.UserInfo{
 			ID:       revUserId,
 			NickName: revUser.UserInfo.Nickname,
@@ -846,7 +854,6 @@ func SendMsgByUser(svcCtx *svc.ServiceContext, revUserId uint, sendUserID uint, 
 		}
 		resp.IsMe = true
 		byteData, _ := json.Marshal(resp)
-		//revUser.Conn.WriteMessage(websocket.TextMessage, byteData)
 		sendWsMapMsg(revUser.WsClientMap, byteData)
 		return
 	}
@@ -869,6 +876,7 @@ func SendMsgByUser(svcCtx *svc.ServiceContext, revUserId uint, sendUserID uint, 
 			Avatar:   userBaseInfo.Avatar,
 		}
 	} else {
+		revUser := revUserAny.(*UserWsInfo)
 		resp.RevUser = ctype.UserInfo{
 			ID:       revUserId,
 			NickName: revUser.UserInfo.Nickname,
@@ -885,14 +893,13 @@ func SendMsgByUser(svcCtx *svc.ServiceContext, revUserId uint, sendUserID uint, 
 	resp.IsMe = true
 	byteData, _ := json.Marshal(resp)
 
-	//sendUser.Conn.WriteMessage(websocket.TextMessage, byteData)
 	sendWsMapMsg(sendUser.WsClientMap, byteData)
 
 	if ok1 {
 		// 接收者在线
+		revUser := revUserAny.(*UserWsInfo)
 		resp.IsMe = false
 		byteData, _ = json.Marshal(resp)
-		//revUser.Conn.WriteMessage(websocket.TextMessage, byteData)
 		sendWsMapMsg(revUser.WsClientMap, byteData)
 	}
 }

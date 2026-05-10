@@ -1,3 +1,4 @@
 deploy/postgres/datadir
 deploy/fim_web/dist
 deploy/nginx/logs
+deploy/fim_file/file_api/uploads
