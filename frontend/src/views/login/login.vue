@@ -15,10 +15,10 @@ const form = reactive<authLoginRequest>({
 
 const rules = reactive<FormRules>({
   userName: [
-    {required: true, message: '请输入管理员账号', trigger: 'blur'},
+    {required: true, message: '请输入账号/用户ID', trigger: 'blur'},
   ],
   password: [
-    {required: true, message: '请输入管理员密码', trigger: 'blur'},
+    {required: true, message: '请输入密码', trigger: 'blur'},
   ]
 })
 
@@ -36,11 +36,11 @@ async function login() {
     return
   }
   
-  ElMessage.success("管理员登录成功")
+  ElMessage.success("登录成功")
   store.setToken(res.data.token)
 
   router.push({
-    name: "admin_dashboard",
+    name: "web",
   })
 }
 </script>
@@ -48,33 +48,34 @@ async function login() {
 <template>
   <el-form ref="formRef" :model="form" :rules="rules">
     <el-form-item prop="userName">
-      <el-input v-model="form.userName" placeholder="管理员账号">
+      <el-input v-model="form.userName" placeholder="账号/用户ID">
         <template #prefix>
           <i class="iconfont icon-yonghuming"></i>
         </template>
       </el-input>
     </el-form-item>
     <el-form-item prop="password" class="item_password">
-      <el-input v-model="form.password" type="password" placeholder="管理员密码">
+      <el-input v-model="form.password" type="password" placeholder="密码">
         <template #prefix>
           <i class="iconfont icon-mima"></i>
         </template>
       </el-input>
     </el-form-item>
     <el-form-item class="item_action xxjfgdfgg">
-      <el-checkbox>记住密码</el-checkbox>
+      <span></span>
+      <router-link :to="{name: 'register'}">没有账号？去注册</router-link>
     </el-form-item>
     <el-form-item class="item_btn">
-      <el-button style="width: 100%" @click="login" type="primary">管理员登录</el-button>
+      <el-button style="width: 100%" @click="login" type="primary">登录</el-button>
     </el-form-item>
   </el-form>
 </template>
 
 <style lang="scss">
-.xxjfgdfgg{
-  .el-form-item__content{
+.xxjfgdfgg {
+  .el-form-item__content {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
   }
 }
 </style>
