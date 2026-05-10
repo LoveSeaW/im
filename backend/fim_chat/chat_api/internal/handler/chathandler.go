@@ -107,6 +107,9 @@ func chatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		// 4. 连接管理
 		addr := conn.RemoteAddr().String()
 		userWsInfo := registerConnection(req.UserID, addr, conn, svcCtx)
+		if userWsInfo == nil {
+			return
+		}
 		//userWsInfo := initUserWsInfo(userInfo, conn, addr)
 		defer cleanupConnection(req.UserID, addr, svcCtx)
 

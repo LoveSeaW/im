@@ -59,8 +59,11 @@ func ListQuery[T any](db *gorm.DB, model T, option Option) (list []T, count int6
 		}
 	}
 
-	// 求总数
-	query.Model(model).Count(&count)
+	// 求总数（不用 Model(model) 避免零值字段被当作 WHERE 条件）
+	err = query.Count(&count).Error
+	if err != nil {
+		return
+	}
 
 	// 预加载
 	for _, s := range option.Preload {

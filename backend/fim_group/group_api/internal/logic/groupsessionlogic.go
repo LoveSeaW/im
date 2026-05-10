@@ -39,8 +39,6 @@ func (l *GroupSessionLogic) GroupSession(req *types.GroupSessionRequest) (resp *
 		Where("user_id = ?", req.UserID).
 		Select("group_id").Scan(&userGroupIDList)
 
-	column := fmt.Sprintf(" (if((select 1 from group_user_top_models where user_id = %d and group_user_top_models.group_id = group_msg_models.group_id), 1, 0)) as isTop", req.UserID)
-
 	// 查哪些聊天记录是被删掉的
 	var msgDeleteIDList []uint
 	l.svcCtx.DB.Model(group_models.GroupUserMsgDeleteModel{}).Where("group_id in ?", userGroupIDList).Select("msg_id").Scan(&msgDeleteIDList)
@@ -58,13 +56,17 @@ func (l *GroupSessionLogic) GroupSession(req *types.GroupSessionRequest) (resp *
 		},
 		Debug: true,
 		Table: func() (string, any) {
-			return "(?) as u", l.svcCtx.DB.Model(&group_models.GroupMsgModel{}).
+			// 内层：GROUP BY 获取每个群的最后消息时间
+			inner := l.svcCtx.DB.Model(&group_models.GroupMsgModel{}).
 				Select("group_id as g_id",
-					"max(created_at) as newMsgDate",
-					column,
-					"(select msg_preview from group_msg_models as g where g.group_id = g_id order by g.created_at desc limit 1)  as newMsgPreview").
+					"max(created_at) as newMsgDate").
 				Where(query).
 				Group("group_id")
+			// 外层：在 grouped 结果上追加 newMsgPreview 和 isTop
+			return "(?) as u", l.svcCtx.DB.Table("(?) as grouped", inner).
+				Select("g_id", "newMsgDate",
+					"(select msg_preview from group_msg_models as g where g.group_id = grouped.g_id order by g.created_at desc limit 1) as newMsgPreview",
+					fmt.Sprintf("CASE WHEN EXISTS (SELECT 1 FROM group_user_top_models WHERE user_id = %d AND group_user_top_models.group_id = grouped.g_id) THEN 1 ELSE 0 END AS isTop", req.UserID))
 		},
 	})
 

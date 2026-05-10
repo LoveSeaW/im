@@ -7,7 +7,6 @@ import (
 	"fim_server/common/models"
 	"fim_server/fim_chat/chat_api/internal/svc"
 	"fim_server/fim_chat/chat_api/internal/types"
-	"fim_server/fim_chat/chat_models"
 	"fim_server/fim_user/user_rpc/types/user_rpc"
 	"fmt"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -37,8 +36,6 @@ type Data struct {
 
 func (l *ChatSessionLogic) ChatSession(req *types.ChatSessionRequest) (resp *types.ChatSessionResponse, err error) {
 
-	column := fmt.Sprintf(" CASE WHEN EXISTS (SELECT 1 FROM top_user_models WHERE user_id = %d AND (top_user_id = sU OR top_user_id = rU)) THEN 1 ELSE 0 END AS isTop", req.UserID)
-
 	var friendIDList []uint
 	friendRes, err := l.svcCtx.UserRpc.FriendList(l.ctx, &user_rpc.FriendListRequest{
 		User: uint32(req.UserID),
@@ -58,16 +55,20 @@ func (l *ChatSessionLogic) ChatSession(req *types.ChatSessionRequest) (resp *typ
 			Sort:  "isTop desc, maxDate desc",
 		},
 		Table: func() (string, any) {
-			return "(?) as u", l.svcCtx.DB.Model(&chat_models.ChatModel{}).
+			// 内层：GROUP BY 获取唯一聊天对
+			inner := l.svcCtx.DB.Table("chat_models").
 				Select("least(send_user_id, rev_user_id) as sU",
 					"greatest(send_user_id, rev_user_id) as rU",
-					"max(created_at) as maxDate",
-					fmt.Sprintf("(select msg_preview from chat_models  where ((send_user_id = sU and rev_user_id = rU) or (send_user_id = rU and rev_user_id = sU)) and id not in (select chat_id from user_chat_delete_models where user_id = %d) order by created_at desc  limit 1) as maxPreview", req.UserID),
-					column).
-				Where("(send_user_id = ? or rev_user_id = ?) and id not in (select chat_id from user_chat_delete_models where user_id = ?) and (send_user_id = ? and rev_user_id in ?) or (rev_user_id = ? and send_user_id in ?)",
+					"max(created_at) as maxDate").
+				Where("(send_user_id = ? or rev_user_id = ?) and id not in (select chat_id from user_chat_delete_models where user_id = ?) and ((send_user_id = ? and rev_user_id in ?) or (rev_user_id = ? and send_user_id in ?))",
 					req.UserID, req.UserID, req.UserID, req.UserID, friendIDList, req.UserID, friendIDList).
 				Group("least(send_user_id, rev_user_id)").
 				Group("greatest(send_user_id, rev_user_id)")
+			// 外层：在 grouped 结果上追加 maxPreview 和 isTop
+			return "(?) as u", l.svcCtx.DB.Table("(?) as grouped", inner).
+				Select("sU", "rU", "maxDate",
+					fmt.Sprintf("(select msg_preview from chat_models as c where least(c.send_user_id, c.rev_user_id) = grouped.sU and greatest(c.send_user_id, c.rev_user_id) = grouped.rU and c.id not in (select chat_id from user_chat_delete_models where user_id = %d) order by c.created_at desc limit 1) as maxPreview", req.UserID),
+					fmt.Sprintf("CASE WHEN EXISTS (SELECT 1 FROM top_user_models WHERE user_id = %d AND (top_user_id = grouped.sU OR top_user_id = grouped.rU)) THEN 1 ELSE 0 END AS isTop", req.UserID))
 		},
 	})
 

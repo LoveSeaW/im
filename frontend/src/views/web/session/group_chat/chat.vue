@@ -39,6 +39,10 @@ async function getData() {
   params.id = Number(route.params.id)
   params.page = 1 // page复位
   let res = await groupHistoryListApi(params)
+  if (res.code) {
+    ElMessage.error(res.msg)
+    return
+  }
   const list = res.data.list || []
   msgList.value = []
   for (const re of list) {
