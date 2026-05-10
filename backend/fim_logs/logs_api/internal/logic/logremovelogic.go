@@ -25,6 +25,10 @@ func NewLogRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogRemo
 }
 
 func (l *LogRemoveLogic) LogRemove(req *types.LogRemoveRequest) (resp *types.LogRemoveResponse, err error) {
+	if len(req.IdList) == 0 {
+		return
+	}
+
 	var logList []logs_model.LogModel
 	l.svcCtx.DB.Find(&logList, "id in ?", req.IdList)
 	if len(logList) > 0 {

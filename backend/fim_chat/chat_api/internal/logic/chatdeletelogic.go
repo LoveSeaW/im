@@ -26,6 +26,9 @@ func NewChatDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ChatDe
 }
 
 func (l *ChatDeleteLogic) ChatDelete(req *types.ChatDeleteRequest) (resp *types.ChatDeleteResponse, err error) {
+	if len(req.IdList) == 0 {
+		return
+	}
 
 	var chatList []chat_models.ChatModel
 	l.svcCtx.DB.Find(&chatList, "id in ?", req.IdList)

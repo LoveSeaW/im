@@ -28,16 +28,16 @@ func ListQuery[T any](db *gorm.DB, model T, option Option) (list []T, count int6
 
 	// 模糊匹配
 	if option.PageInfo.Key != "" && len(option.Likes) > 0 {
-		likeQuery := db.Where("")
+		likeQuery := db.Session(&gorm.Session{NewDB: true})
 		for index, column := range option.Likes {
 			if index == 0 {
 				// where name like '%fengfeng%'
-				likeQuery.Where(fmt.Sprintf("%s ILIKE ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
+				likeQuery = likeQuery.Where(fmt.Sprintf("%s ILIKE ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
 			} else {
-				likeQuery.Or(fmt.Sprintf("%s ILIKE ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
+				likeQuery = likeQuery.Or(fmt.Sprintf("%s ILIKE ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
 			}
 		}
-		query.Where(likeQuery)
+		query = query.Where(likeQuery)
 	}
 
 	if option.Table != nil {
@@ -83,7 +83,7 @@ func ListQuery[T any](db *gorm.DB, model T, option Option) (list []T, count int6
 	offset := (option.PageInfo.Page - 1) * option.PageInfo.Limit
 
 	if option.PageInfo.Sort != "" {
-		query.Order(option.PageInfo.Sort)
+		query = query.Order(option.PageInfo.Sort)
 	}
 
 	err = query.Limit(option.PageInfo.Limit).Offset(offset).Find(&list).Error

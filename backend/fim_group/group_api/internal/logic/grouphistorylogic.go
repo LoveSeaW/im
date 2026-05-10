@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"gorm.io/gorm"
 )
 
 type GroupHistoryLogic struct {
@@ -62,9 +63,9 @@ func (l *GroupHistoryLogic) GroupHistory(req *types.GroupHistoryRequest) (resp *
 	l.svcCtx.DB.Model(group_models.GroupUserMsgDeleteModel{}).
 		Where("group_id = ? and user_id = ?", req.ID, req.UserID).
 		Select("msg_id").Scan(&msgIDList)
-	var query = l.svcCtx.DB.Where("")
+	var query *gorm.DB
 	if len(msgIDList) > 0 {
-		query.Where("id not in ?", msgIDList)
+		query = l.svcCtx.DB.Where("id not in ?", msgIDList)
 	}
 
 	groupMsgList, count, err := list_query.ListQuery(l.svcCtx.DB, group_models.GroupMsgModel{GroupID: req.ID}, list_query.Option{

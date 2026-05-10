@@ -27,11 +27,11 @@ func NewChatSessionLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ChatS
 }
 
 type Data struct {
-	SU         uint   `gorm:"column:sU"`
-	RU         uint   `gorm:"column:rU"`
-	MaxDate    string `gorm:"column:maxDate"`
-	MaxPreview string `gorm:"column:maxPreview"`
-	IsTop      bool   `gorm:"column:isTop"`
+	SU         uint   `gorm:"column:s_u"`
+	RU         uint   `gorm:"column:r_u"`
+	MaxDate    string `gorm:"column:max_date"`
+	MaxPreview string `gorm:"column:max_preview"`
+	IsTop      bool   `gorm:"column:is_top"`
 }
 
 func (l *ChatSessionLogic) ChatSession(req *types.ChatSessionRequest) (resp *types.ChatSessionResponse, err error) {
@@ -47,28 +47,31 @@ func (l *ChatSessionLogic) ChatSession(req *types.ChatSessionRequest) (resp *typ
 	for _, info := range friendRes.FriendList {
 		friendIDList = append(friendIDList, uint(info.UserId))
 	}
+	if len(friendIDList) == 0 {
+		return &types.ChatSessionResponse{List: []types.ChatSession{}, Count: 0}, nil
+	}
 
 	chatList, count, _ := list_query.ListQuery(l.svcCtx.DB, Data{}, list_query.Option{
 		PageInfo: models.PageInfo{
 			Page:  req.Page,
 			Limit: req.Limit,
-			Sort:  "isTop desc, maxDate desc",
+			Sort:  "is_top desc, max_date desc",
 		},
 		Table: func() (string, any) {
 			// 内层：GROUP BY 获取唯一聊天对
 			inner := l.svcCtx.DB.Table("chat_models").
-				Select("least(send_user_id, rev_user_id) as sU",
-					"greatest(send_user_id, rev_user_id) as rU",
-					"max(created_at) as maxDate").
+				Select("least(send_user_id, rev_user_id) as s_u",
+					"greatest(send_user_id, rev_user_id) as r_u",
+					"max(created_at) as max_date").
 				Where("(send_user_id = ? or rev_user_id = ?) and id not in (select chat_id from user_chat_delete_models where user_id = ?) and ((send_user_id = ? and rev_user_id in ?) or (rev_user_id = ? and send_user_id in ?))",
 					req.UserID, req.UserID, req.UserID, req.UserID, friendIDList, req.UserID, friendIDList).
 				Group("least(send_user_id, rev_user_id)").
 				Group("greatest(send_user_id, rev_user_id)")
 			// 外层：在 grouped 结果上追加 maxPreview 和 isTop
 			return "(?) as u", l.svcCtx.DB.Table("(?) as grouped", inner).
-				Select("sU", "rU", "maxDate",
-					fmt.Sprintf("(select msg_preview from chat_models as c where least(c.send_user_id, c.rev_user_id) = grouped.sU and greatest(c.send_user_id, c.rev_user_id) = grouped.rU and c.id not in (select chat_id from user_chat_delete_models where user_id = %d) order by c.created_at desc limit 1) as maxPreview", req.UserID),
-					fmt.Sprintf("CASE WHEN EXISTS (SELECT 1 FROM top_user_models WHERE user_id = %d AND (top_user_id = grouped.sU OR top_user_id = grouped.rU)) THEN 1 ELSE 0 END AS isTop", req.UserID))
+				Select("s_u", "r_u", "max_date",
+					fmt.Sprintf("(select msg_preview from chat_models as c where least(c.send_user_id, c.rev_user_id) = grouped.s_u and greatest(c.send_user_id, c.rev_user_id) = grouped.r_u and c.id not in (select chat_id from user_chat_delete_models where user_id = %d) order by c.created_at desc limit 1) as max_preview", req.UserID),
+					fmt.Sprintf("CASE WHEN EXISTS (SELECT 1 FROM top_user_models WHERE user_id = %d AND (top_user_id = grouped.s_u OR top_user_id = grouped.r_u)) THEN true ELSE false END AS is_top", req.UserID))
 		},
 	})
 

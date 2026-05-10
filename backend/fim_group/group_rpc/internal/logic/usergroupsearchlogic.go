@@ -25,6 +25,12 @@ func NewUserGroupSearchLogic(ctx context.Context, svcCtx *svc.ServiceContext) *U
 }
 
 func (l *UserGroupSearchLogic) UserGroupSearch(in *group_rpc.UserGroupSearchRequest) (resp *group_rpc.UserGroupSearchResponse, err error) {
+	resp = new(group_rpc.UserGroupSearchResponse)
+	resp.Result = map[uint32]int32{}
+	if len(in.UserIdList) == 0 {
+		return resp, nil
+	}
+
 	type Data struct {
 		UserID uint32 `gorm:"column:user_id"`
 		Count  uint32 `gorm:"column:count"`
@@ -46,8 +52,6 @@ func (l *UserGroupSearchLogic) UserGroupSearch(in *group_rpc.UserGroupSearchRequ
 	for _, u2 := range data {
 		groupUserMap[u2.UserID] = u2.Count
 	}
-	resp = new(group_rpc.UserGroupSearchResponse)
-	resp.Result = map[uint32]int32{}
 	for _, uid := range in.UserIdList {
 		resp.Result[uid] = int32(groupUserMap[uid])
 	}

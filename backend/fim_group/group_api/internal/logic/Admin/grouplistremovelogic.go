@@ -27,6 +27,10 @@ func NewGroupListRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 
 // GroupListRemove 删除群
 func (l *GroupListRemoveLogic) GroupListRemove(req *types.GroupListRemoveRequest) (resp *types.GroupListRemoveResponse, err error) {
+	if len(req.IdList) == 0 {
+		return
+	}
+
 	var groupList []group_models.GroupModel
 	l.svcCtx.DB.Preload("MemberList").Preload("GroupMsgList").Find(&groupList, "id in ?", req.IdList)
 	for _, model := range groupList {

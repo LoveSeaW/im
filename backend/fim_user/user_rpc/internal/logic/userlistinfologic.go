@@ -23,11 +23,15 @@ func NewUserListInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *User
 }
 
 func (l *UserListInfoLogic) UserListInfo(in *user_rpc.UserListInfoRequest) (*user_rpc.UserListInfoResponse, error) {
+	resp := new(user_rpc.UserListInfoResponse)
+	resp.UserInfo = make(map[uint32]*user_rpc.UserInfo, 0)
+	if len(in.UserIdList) == 0 {
+		return resp, nil
+	}
+
 	var userList []user_models.UserModel
 	l.svcCtx.DB.Find(&userList, "id in ?", in.UserIdList)
 
-	resp := new(user_rpc.UserListInfoResponse)
-	resp.UserInfo = make(map[uint32]*user_rpc.UserInfo, 0)
 	for _, i2 := range userList {
 		resp.UserInfo[uint32(i2.ID)] = &user_rpc.UserInfo{
 			NickName: i2.Nickname,

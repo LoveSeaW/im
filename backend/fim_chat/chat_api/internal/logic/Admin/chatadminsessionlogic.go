@@ -34,6 +34,10 @@ func (l *ChatAdminSessionLogic) ChatAdminSession(req *types.ChatAdminSessionRequ
 		Where("rev_user_id = ?", req.RevUserID).
 		Group("send_user_id").
 		Select("send_user_id").Scan(&sendUserIDList)
+	resp = new(types.ChatAdminSessionResponse)
+	if len(sendUserIDList) == 0 {
+		return resp, nil
+	}
 
 	userList, err := l.svcCtx.UserRpc.UserListInfo(l.ctx, &user_rpc.UserListInfoRequest{
 		UserIdList: sendUserIDList,
@@ -41,7 +45,6 @@ func (l *ChatAdminSessionLogic) ChatAdminSession(req *types.ChatAdminSessionRequ
 	if err != nil {
 		return nil, errors.New("用户服务错误")
 	}
-	resp = new(types.ChatAdminSessionResponse)
 	for u, info := range userList.UserInfo {
 		resp.List = append(resp.List, types.UserInfo{
 			UserID:   uint(u),

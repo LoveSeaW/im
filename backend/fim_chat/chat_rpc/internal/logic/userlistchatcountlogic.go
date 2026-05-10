@@ -25,6 +25,12 @@ func NewUserListChatCountLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 
 // UserListChatCount 查询用户发送的消息个数和接收消息的个数
 func (l *UserListChatCountLogic) UserListChatCount(in *chat_rpc.UserListChatCountRequest) (*chat_rpc.UserListChatCountResponse, error) {
+	resp := new(chat_rpc.UserListChatCountResponse)
+	resp.Result = map[uint32]*chat_rpc.ChatCountMessage{}
+	if len(in.UserIdList) == 0 {
+		return resp, nil
+	}
+
 	type Data struct {
 		UserID uint32 `gorm:"column:user_id"`
 		Count  int32  `gorm:"column:count"`
@@ -40,9 +46,6 @@ func (l *UserListChatCountLogic) UserListChatCount(in *chat_rpc.UserListChatCoun
 		Where("rev_user_id in ?", in.UserIdList).
 		Group("rev_user_id").
 		Select("rev_user_id as user_id", "count(id) as count").Scan(&revList)
-
-	resp := new(chat_rpc.UserListChatCountResponse)
-	resp.Result = map[uint32]*chat_rpc.ChatCountMessage{}
 
 	for _, data := range sendList {
 		resp.Result[data.UserID] = &chat_rpc.ChatCountMessage{

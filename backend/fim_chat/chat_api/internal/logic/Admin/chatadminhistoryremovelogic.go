@@ -25,6 +25,10 @@ func NewChatAdminHistoryRemoveLogic(ctx context.Context, svcCtx *svc.ServiceCont
 }
 
 func (l *ChatAdminHistoryRemoveLogic) ChatAdminHistoryRemove(req *types.ChatAdminHistoryRemoveRequest) (resp *types.ChatAdminHistoryRemoveResponse, err error) {
+	if len(req.IdList) == 0 {
+		return
+	}
+
 	var msgList []chat_models.ChatModel
 	l.svcCtx.DB.Find(&msgList, "id in ?", req.IdList).Delete(&msgList)
 	logx.Infof("删除聊天记录个数 %d", len(msgList))

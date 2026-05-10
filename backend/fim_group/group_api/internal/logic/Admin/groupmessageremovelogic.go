@@ -25,6 +25,10 @@ func NewGroupMessageRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *GroupMessageRemoveLogic) GroupMessageRemove(req *types.GroupMessageRemoveRequest) (resp *types.GroupMessageRemoveResponse, err error) {
+	if len(req.IdList) == 0 {
+		return
+	}
+
 	var messageList []group_models.GroupMsgModel
 	l.svcCtx.DB.Find(&messageList, "id in ?", req.IdList).Delete(&messageList)
 	var userDeleteMessageList []group_models.GroupUserMsgDeleteModel

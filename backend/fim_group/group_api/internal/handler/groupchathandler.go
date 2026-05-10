@@ -371,6 +371,9 @@ func sendGroupOnlineUserMsg(db *gorm.DB, member group_models.GroupMemberModel, m
 
 	// 查在线的用户列表
 	userOnlineIDList := getOnlineUserIDList()
+	if len(userOnlineIDList) == 0 {
+		return
+	}
 	// 查这个群的成员 并且在线
 	var groupMemberOnlineIDList []uint
 	db.Model(group_models.GroupMemberModel{}).

@@ -24,6 +24,10 @@ func NewFileListRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Fi
 }
 
 func (l *FileListRemoveLogic) FileListRemove(req *types.FileListRemoveRequest) (resp *types.FileListRemoveResponse, err error) {
+	if len(req.IdList) == 0 {
+		return
+	}
+
 	var fileList []file_model.FileModel
 	l.svcCtx.DB.Find(&fileList, "id in ?", req.IdList).Delete(&fileList)
 	logx.Infof("删除文件个数 %d", len(fileList))

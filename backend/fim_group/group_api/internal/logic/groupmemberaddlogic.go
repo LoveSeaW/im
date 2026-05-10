@@ -26,6 +26,10 @@ func NewGroupMemberAddLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Gr
 }
 
 func (l *GroupMemberAddLogic) GroupMemberAdd(req *types.GroupMemberAddRequest) (resp *types.GroupMemberAddResponse, err error) {
+	if len(req.MemberIDList) == 0 {
+		return nil, errors.New("member list is empty")
+	}
+
 	// 群成员邀请好友，得IsInvite=true
 	var member group_models.GroupMemberModel
 	err = l.svcCtx.DB.Preload("GroupModel").Take(&member, "group_id = ? and user_id = ?", req.ID, req.UserID).Error

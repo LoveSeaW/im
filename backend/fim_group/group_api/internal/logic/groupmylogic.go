@@ -34,9 +34,12 @@ func (l *GroupMyLogic) GroupMy(req *types.GroupMyRequest) (resp *types.GroupMyLi
 	query := l.svcCtx.DB.Model(&group_models.GroupMemberModel{}).Where("user_id = ?", req.UserID)
 	if req.Mode == 1 {
 		// 我创建的群聊
-		query.Where("role = ?", 1)
+		query = query.Where("role = ?", 1)
 	}
 	query.Select("group_id").Scan(&groupIDList)
+	if len(groupIDList) == 0 {
+		return &types.GroupMyListResponse{List: []types.GroupMyResponse{}, Count: 0}, nil
+	}
 
 	groupList, count, _ := list_query.ListQuery(l.svcCtx.DB, group_models.GroupModel{}, list_query.Option{
 		PageInfo: models.PageInfo{

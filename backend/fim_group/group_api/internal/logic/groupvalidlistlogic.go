@@ -8,6 +8,7 @@ import (
 	"fim_server/fim_group/group_api/internal/types"
 	"fim_server/fim_group/group_models"
 	"fim_server/fim_user/user_rpc/types/user_rpc"
+
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -26,15 +27,20 @@ func NewGroupValidListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Gr
 }
 
 func (l *GroupValidListLogic) GroupValidList(req *types.GroupValidListRequest) (resp *types.GroupValidListResponse, err error) {
-	// 群验证列表  自己得是群管理员或者是群主
-	var groupIDList []uint // 我管理的群
-	l.svcCtx.DB.Model(group_models.GroupMemberModel{}).Where("user_id = ? and (role = 1 or role = 2)", req.UserID).Select("group_id").Scan(&groupIDList)
+	var groupIDList []uint
+	l.svcCtx.DB.Model(group_models.GroupMemberModel{}).
+		Where("user_id = ? and (role = 1 or role = 2)", req.UserID).
+		Select("group_id").Scan(&groupIDList)
 
-	var groupMap = map[uint]bool{}
-	for _, u := range groupIDList {
-		groupMap[u] = true
+	groupMap := map[uint]bool{}
+	for _, id := range groupIDList {
+		groupMap[id] = true
 	}
-	// 先去查自己管理了哪些群，然后去找这些群的验证表
+
+	where := l.svcCtx.DB.Where("user_id = ?", req.UserID)
+	if len(groupIDList) > 0 {
+		where = where.Or("group_id in ?", groupIDList)
+	}
 
 	groups, count, err := list_query.ListQuery(l.svcCtx.DB, group_models.GroupVerifyModel{}, list_query.Option{
 		PageInfo: models.PageInfo{
@@ -42,8 +48,11 @@ func (l *GroupValidListLogic) GroupValidList(req *types.GroupValidListRequest) (
 			Limit: req.Limit,
 		},
 		Preload: []string{"GroupModel"},
-		Where:   l.svcCtx.DB.Where("group_id in ? or user_id = ?", groupIDList, req.UserID),
+		Where:   where,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	var userIDList []uint32
 	for _, group := range groups {
@@ -67,7 +76,7 @@ func (l *GroupValidListLogic) GroupValidList(req *types.GroupValidListRequest) (
 			CreatedAt:          groupVerify.CreatedAt.String(),
 			Type:               groupVerify.Type,
 			Avatar:             groupVerify.GroupModel.Avatar,
-			Flag:               "send", // 我是发送着
+			Flag:               "send",
 		}
 		if groupVerify.VerificationQuestion != nil {
 			info.VerificationQuestion = &types.VerificationQuestion{
@@ -80,10 +89,8 @@ func (l *GroupValidListLogic) GroupValidList(req *types.GroupValidListRequest) (
 			}
 		}
 
-		// 怎么判断我是加群方还是验证方呢？
-		// 只需要判断 groupVerify.GroupID
 		if groupMap[groupVerify.GroupID] {
-			info.Flag = "rev" // 我是接收者
+			info.Flag = "rev"
 		}
 
 		if err1 == nil {
@@ -94,5 +101,5 @@ func (l *GroupValidListLogic) GroupValidList(req *types.GroupValidListRequest) (
 		resp.List = append(resp.List, info)
 	}
 
-	return
+	return resp, nil
 }
