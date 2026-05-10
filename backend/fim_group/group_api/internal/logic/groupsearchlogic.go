@@ -38,7 +38,7 @@ func (l *GroupSearchLogic) GroupSearch(req *types.GroupSearchRequest) (resp *typ
 			Limit: req.Limit,
 		},
 		Preload: []string{"MemberList"},
-		Where:   l.svcCtx.DB.Where("is_search = 1 and ( id = ? or title like ? )", req.Key, fmt.Sprintf("%%%s%%", req.Key)),
+		Where:   l.svcCtx.DB.Where("is_search = true and ( id = ? or title ILIKE ? )", req.Key, fmt.Sprintf("%%%s%%", req.Key)),
 	})
 
 	userOnlineResponse, err := l.svcCtx.UserRpc.UserOnlineList(l.ctx, &user_rpc.UserOnlineListRequest{})

@@ -7,6 +7,6 @@ import (
 
 type SettingsModel struct {
 	models.Model
-	Site ctype.SiteType `json:"site"`
-	QQ   ctype.QQType   `json:"qq"`
+	Site ctype.SiteType `gorm:"type:jsonb" json:"site"`
+	QQ   ctype.QQType   `gorm:"type:jsonb" json:"qq"`
 }

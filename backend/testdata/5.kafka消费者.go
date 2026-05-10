@@ -10,7 +10,7 @@ import (
 
 func TopicEvent(topic string) {
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:        []string{"localhost:9092"},
+		Brokers:        []string{"127.0.0.1:9092"},
 		Topic:          topic,
 		CommitInterval: 1 * time.Second,
 		GroupID:        "rec_team",

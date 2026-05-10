@@ -10,7 +10,7 @@ type Config struct {
 	rest.RestConf
 	KqConsumerConf kq.KqConf
 	Etcd           string
-	Mysql          struct {
+	Database       struct {
 		DataSource string
 	}
 	UserRpc      zrpc.RpcClientConf

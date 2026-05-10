@@ -22,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	if opt.DB {
-		db := core.InitGorm("root:root@tcp(127.0.0.1:3306)/fim_server_db?charset=utf8mb4&parseTime=True&loc=Local")
+		db := core.InitGorm("host=127.0.0.1 user=root password=root dbname=fim_server_db port=5432 sslmode=disable TimeZone=Asia/Shanghai")
 		err := db.AutoMigrate(
 			&user_models.UserModel{},                // 用户表
 			&user_models.FriendModel{},              // 好友表

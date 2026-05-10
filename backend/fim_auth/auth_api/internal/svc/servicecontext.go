@@ -27,7 +27,7 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
-	mysqlDb := core.InitGorm(c.Mysql.DataSource)
+	mysqlDb := core.InitGorm(c.Database.DataSource)
 	client := core.InitRedis(c.Redis.Addr, c.Redis.Pwd, c.Redis.DB)
 	kqClient := kq.NewPusher(c.KqPusherConf.Brokers, c.KqPusherConf.Topic)
 	return &ServiceContext{

@@ -20,7 +20,7 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
-	mysqlDb := core.InitGorm(c.Mysql.DataSource)
+	mysqlDb := core.InitGorm(c.Database.DataSource)
 	return &ServiceContext{
 		Config:          c,
 		UserRpc:         users.NewUsers(zrpc.MustNewClient(c.UserRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),

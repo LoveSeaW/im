@@ -10,7 +10,7 @@ import (
 
 func SendTopic(topic string, msg []byte) {
 	writer := &kafka.Writer{
-		Addr:                   kafka.TCP("localhost:9092"),
+		Addr:                   kafka.TCP("127.0.0.1:9092"),
 		Topic:                  topic,
 		Balancer:               &kafka.Hash{},
 		WriteTimeout:           1 * time.Second,

@@ -1,8 +1,8 @@
 Name: auth
 Host: 0.0.0.0
 Port: 20021
-Mysql:
-  DataSource: root:root@tcp(127.0.0.1:3306)/fim_server_db?charset=utf8mb4&parseTime=True&loc=Local
+Database:
+  DataSource: host=127.0.0.1 user=root password=root dbname=fim_server_db port=5432 sslmode=disable TimeZone=Asia/Shanghai
 Auth:
   AccessSecret: dfff1234
   AccessExpire: 3600
@@ -14,7 +14,7 @@ Redis:
   Addr: 127.0.0.1:6379
   Pwd:
   DB: 0
-Etcd: 192.168.80.3:2379
+Etcd: 127.0.0.1:2379
 OpenLoginList:
   - name: QQ登录
     icon: https://www.fengfengzhidao.com/image/icon/qq.png
@@ -22,12 +22,12 @@ OpenLoginList:
 UserRpc:
   Etcd:
     Hosts:
-      - 192.168.80.3:2379
+      - 127.0.0.1:2379
     Key: userrpc.rpc
 SettingsRpc:
   Etcd:
     Hosts:
-      - 192.168.80.3:2379
+      - 127.0.0.1:2379
     Key: settingsrpc.rpc
 WhiteList:
   - /api/auth/login
@@ -40,5 +40,5 @@ WhiteList:
   - /api/settings/info
 KqPusherConf:
   Brokers:
-    - 192.168.80.3:9092
+    - 127.0.0.1:9092
   Topic: log-topic

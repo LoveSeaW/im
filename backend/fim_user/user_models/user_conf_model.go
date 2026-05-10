@@ -17,7 +17,7 @@ type UserConfModel struct {
 	SavePwd              bool                        `json:"savePwd"`                      // 保存密码
 	SearchUser           int8                        `json:"searchUser"`                   // 别人查找到你的方式 0 不允许别人查找到我， 1  通过用户号找到我 2 可以通过昵称搜索到我
 	Verification         int8                        `json:"verification"`                 // 好友验证 0 不允许任何人添加  1 允许任何人添加  2 需要验证消息 3 需要回答问题  4  需要正确回答问题
-	VerificationQuestion *ctype.VerificationQuestion `json:"verificationQuestion"`         // 验证问题  为3和4的时候需要
+	VerificationQuestion *ctype.VerificationQuestion `gorm:"type:jsonb" json:"verificationQuestion"`         // 验证问题  为3和4的时候需要
 	Online               bool                        `json:"online"`                       // 是否在线
 	CurtailChat          bool                        `json:"curtailChat"`                  // 限制聊天
 	CurtailAddUser       bool                        `json:"curtailAddUser"`               // 限制加人

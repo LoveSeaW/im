@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	db := core.InitGorm("root:root@tcp(127.0.0.1:3306)/fim_server_db?charset=utf8mb4&parseTime=True&loc=Local")
+	db := core.InitGorm("host=127.0.0.1 user=root password=root dbname=fim_server_db port=5432 sslmode=disable TimeZone=Asia/Shanghai")
 
 	var userId = 1
 	type Data struct {
@@ -31,7 +31,7 @@ func main() {
 		Order("maxDate desc").Limit(1).Offset(0).Scan(&list)
 	fmt.Println(list)
 
-	column := fmt.Sprintf("if((select 1 from top_user_models where user_id = %d and (top_user_id = sU or top_user_id = rU)), 1, 0)  as isTop", userId)
+	column := fmt.Sprintf("CASE WHEN EXISTS (SELECT 1 FROM top_user_models WHERE user_id = %d AND (top_user_id = sU OR top_user_id = rU)) THEN 1 ELSE 0 END AS isTop", userId)
 
 	chatList, count, _ := list_query.ListQuery(db, Data{}, list_query.Option{
 		PageInfo: models.PageInfo{

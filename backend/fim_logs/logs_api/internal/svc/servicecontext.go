@@ -24,7 +24,7 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
-	mysqlDb := core.InitGorm(c.Mysql.DataSource)
+	mysqlDb := core.InitGorm(c.Database.DataSource)
 
 	kqClient := kq.NewPusher(c.KqPusherConf.Brokers, c.KqPusherConf.Topic)
 	return &ServiceContext{

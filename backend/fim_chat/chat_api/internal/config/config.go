@@ -8,7 +8,7 @@ import (
 type Config struct {
 	rest.RestConf
 	Etcd  string
-	Mysql struct {
+	Database struct {
 		DataSource string
 	}
 	UserRpc zrpc.RpcClientConf

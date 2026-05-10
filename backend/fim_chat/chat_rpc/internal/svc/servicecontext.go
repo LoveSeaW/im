@@ -12,7 +12,7 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
-	mysqlDb := core.InitGorm(c.Mysql.DataSource)
+	mysqlDb := core.InitGorm(c.Database.DataSource)
 	return &ServiceContext{
 		Config: c,
 		DB:     mysqlDb,

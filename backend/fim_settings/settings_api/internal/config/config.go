@@ -10,7 +10,7 @@ type Config struct {
 		Icon string
 		Href string
 	}
-	Mysql struct {
+	Database struct {
 		DataSource string
 	}
 }

@@ -69,7 +69,7 @@ func (l *LogEvent) Consume(key, val string) error {
 
 		mutex.Lock()
 		var logModel logs_model.LogModel
-		err = l.svcCtx.DB.Take(&logModel, "log_type = ? and service = ? and to_days(created_at) = to_days(now())", 3, info.Service).Error
+		err = l.svcCtx.DB.Take(&logModel, "log_type = ? and service = ? and created_at::date = current_date", 3, info.Service).Error
 		mutex.Unlock()
 		if err == nil {
 			// 找到了

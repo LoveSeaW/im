@@ -32,9 +32,9 @@ func ListQuery[T any](db *gorm.DB, model T, option Option) (list []T, count int6
 		for index, column := range option.Likes {
 			if index == 0 {
 				// where name like '%fengfeng%'
-				likeQuery.Where(fmt.Sprintf("%s like ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
+				likeQuery.Where(fmt.Sprintf("%s ILIKE ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
 			} else {
-				likeQuery.Or(fmt.Sprintf("%s like ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
+				likeQuery.Or(fmt.Sprintf("%s ILIKE ?", column), fmt.Sprintf("%%%s%%", option.PageInfo.Key))
 			}
 		}
 		query.Where(likeQuery)

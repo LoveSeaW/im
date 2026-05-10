@@ -37,7 +37,7 @@ type Data struct {
 
 func (l *ChatSessionLogic) ChatSession(req *types.ChatSessionRequest) (resp *types.ChatSessionResponse, err error) {
 
-	column := fmt.Sprintf(" if((select 1 from top_user_models where user_id = %d and (top_user_id = sU or top_user_id = rU) limit 1), 1, 0)  as isTop", req.UserID)
+	column := fmt.Sprintf(" CASE WHEN EXISTS (SELECT 1 FROM top_user_models WHERE user_id = %d AND (top_user_id = sU OR top_user_id = rU)) THEN 1 ELSE 0 END AS isTop", req.UserID)
 
 	var friendIDList []uint
 	friendRes, err := l.svcCtx.UserRpc.FriendList(l.ctx, &user_rpc.FriendListRequest{
