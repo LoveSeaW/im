@@ -1,0 +1,3 @@
+deploy/postgres/datadir
+deploy/fim_web/dist
+deploy/nginx/logs
