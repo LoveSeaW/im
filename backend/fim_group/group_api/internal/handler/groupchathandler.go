@@ -111,6 +111,7 @@ func groupChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			// 代表这个用户第一次来
 			UserOnlineWsMap[req.UserID] = userWsInfo
 		}
+		userWsInfo.UserInfo = userInfo
 		_, ok1 := userWsInfo.WsClientMap[addr]
 		if !ok1 {
 			// 代表这个用户二开及以上

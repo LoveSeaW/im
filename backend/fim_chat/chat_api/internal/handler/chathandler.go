@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fim_server/common/models/ctype"
@@ -106,7 +105,7 @@ func chatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		// 4. 连接管理
 		addr := conn.RemoteAddr().String()
-		userWsInfo := registerConnection(req.UserID, addr, conn, svcCtx)
+		userWsInfo := registerConnection(req.UserID, addr, conn, svcCtx, userInfo)
 		if userWsInfo == nil {
 			return
 		}
@@ -138,7 +137,7 @@ func chatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 }
 
 // 注册连接（集成go-zero限流器）
-func registerConnection(userID uint, addr string, conn *websocket.Conn, svcCtx *svc.ServiceContext) *UserWsInfo {
+func registerConnection(userID uint, addr string, conn *websocket.Conn, svcCtx *svc.ServiceContext, userInfo user_models.UserModel) *UserWsInfo {
 	redisConf := redis.RedisConf{
 		Host: svcCtx.Config.Redis.Addr,
 		Pass: svcCtx.Config.Redis.Pwd,
@@ -152,6 +151,7 @@ func registerConnection(userID uint, addr string, conn *websocket.Conn, svcCtx *
 	limiter := limit.NewTokenLimiter(1, 100, newRedis, fmt.Sprintf("ws:limit:%d", userID))
 
 	userWs := &UserWsInfo{
+		UserInfo:    userInfo,
 		CurrentConn: conn,
 		Limiter:     limiter,
 		WsClientMap: &sync.Map{},
@@ -162,6 +162,8 @@ func registerConnection(userID uint, addr string, conn *websocket.Conn, svcCtx *
 	actual, loaded := UserOnlineWsMap.LoadOrStore(userID, userWs)
 	if loaded {
 		userWs = actual.(*UserWsInfo)
+		userWs.UserInfo = userInfo
+		userWs.CurrentConn = conn
 	}
 
 	userWs.WsClientMap.Store(addr, conn)
@@ -191,36 +193,8 @@ func cleanupConnection(userID uint, addr string, svcCtx *svc.ServiceContext) {
 
 // 处理入站消息
 func handleIncomingMessages(ctx context.Context, conn *websocket.Conn, userWsInfo *UserWsInfo, svcCtx *svc.ServiceContext, userID uint, userInfo user_models.UserModel) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			_, p, err := conn.ReadMessage()
-			if err != nil {
-				if !websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-					logx.Errorf("Read error: %v", err)
-				}
-				return
-			}
-
-			// 限流检查
-			if !userWsInfo.Limiter.Allow() {
-				SendTipErrMsg(conn, "消息发送频率过高")
-				continue
-			}
-
-			var request ChatRequest
-			if err := json.Unmarshal(p, &request); err != nil {
-				SendTipErrMsg(conn, "消息格式错误")
-				continue
-			}
-
-			// 消息处理逻辑（原业务代码）
-			if err := processMessage(request, userID, userWsInfo, svcCtx, userInfo); err != nil {
-				SendTipErrMsg(conn, err.Error())
-			}
-		}
+	if err := processMessage(ChatRequest{}, userID, userWsInfo, svcCtx, userInfo); err != nil {
+		SendTipErrMsg(conn, err.Error())
 	}
 }
 
@@ -704,8 +678,11 @@ func handleOutgoingMessages(ctx context.Context, conn *websocket.Conn, userWsInf
 // 批量发送优化
 func sendBatch(conn *websocket.Conn, messages [][]byte) {
 	conn.SetWriteDeadline(time.Now().Add(writeTimeout))
-	if err := conn.WriteMessage(websocket.TextMessage, bytes.Join(messages, []byte("\n"))); err != nil {
-		logx.Errorf("Batch write failed: %v", err)
+	for _, msg := range messages {
+		if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			logx.Errorf("Batch write failed: %v", err)
+			return
+		}
 	}
 }
 
